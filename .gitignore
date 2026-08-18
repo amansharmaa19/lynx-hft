@@ -1,0 +1,21 @@
+# Build
+build/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.swp
+
+# Compiled binaries
+*.o
+*.a
+*.so
