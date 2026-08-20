@@ -1,23 +1,32 @@
 #include <iostream>
 
+#include "market_data/simulated_feed.h"
 #include "order_book/order_book.h"
 
 int main()
 {
     OrderBook book;
+    SimulatedFeed feed;
 
-    book.update_bid(10000, 500);
-    book.update_bid(9990, 300);
-    book.update_bid(9980, 800);
+    MarketDataUpdate update;
 
-    book.update_ask(10010, 400);
-    book.update_ask(10020, 700);
-    book.update_ask(10030, 200);
+    while (feed.next_update(update))
+    {
+        if (update.side == Side::Buy)
+        {
+            book.update_bid(update.price, update.quantity);
+        }
+        else
+        {
+            book.update_ask(update.price, update.quantity);
+        }
 
-    std::cout << "Best Bid: " << book.best_bid() << '\n';
-    std::cout << "Best Ask: " << book.best_ask() << '\n';
-    std::cout << "Spread: " << book.spread() << '\n';
-    std::cout << "Mid: " << book.mid_price() << '\n';
+        std::cout
+            << "Best Bid: " << book.best_bid()
+            << " | Best Ask: " << book.best_ask()
+            << " | Spread: " << book.spread()
+            << '\n';
+    }
 
     return 0;
 }

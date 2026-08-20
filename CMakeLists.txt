@@ -20,6 +20,7 @@ add_compile_options(
 add_executable(lynx
     src/main.cpp
     src/order_book/order_book.cpp
+    src/market_data/simulated_feed.cpp
 )
 
 target_include_directories(lynx
@@ -34,6 +35,16 @@ target_include_directories(lynx
 enable_testing()
 
 find_package(GTest REQUIRED)
+
+add_executable(simulated_feed_test
+    tests/market_data/simulated_feed_test.cpp
+    src/market_data/simulated_feed.cpp
+)
+
+target_include_directories(simulated_feed_test
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/header
+)
 
 add_executable(order_book_test
     tests/order_book_test/order_book_test.cpp
@@ -50,6 +61,13 @@ target_link_libraries(order_book_test
         GTest::gtest_main
 )
 
-include(GoogleTest)
+target_link_libraries(simulated_feed_test
+    PRIVATE
+        GTest::gtest_main
+)
+
+gtest_discover_tests(simulated_feed_test)
 
 gtest_discover_tests(order_book_test)
+
+include(GoogleTest)
