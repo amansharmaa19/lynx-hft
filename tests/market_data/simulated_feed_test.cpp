@@ -2,31 +2,35 @@
 
 #include "market_data/simulated_feed.h"
 
-TEST(SimulatedFeedTest, ProducesUpdates)
+TEST(SimulatedFeedTest, ProducesEvents)
 {
     SimulatedFeed feed;
 
-    MarketDataUpdate update;
+    MarketDataEvent event;
 
-    EXPECT_TRUE(feed.next_update(update));
+    EXPECT_TRUE(feed.next_event(event));
 
-    EXPECT_EQ(update.side, Side::Buy);
-    EXPECT_EQ(update.price, 10000);
-    EXPECT_EQ(update.quantity, 500);
+    EXPECT_EQ(event.type, MarketDataEventType::Add);
+    EXPECT_EQ(event.order_id, 1001);
+    EXPECT_EQ(event.side, Side::Buy);
+    EXPECT_EQ(event.price, 10000);
+    EXPECT_EQ(event.quantity, 500);
 }
 
 TEST(SimulatedFeedTest, EventuallyEnds)
 {
     SimulatedFeed feed;
 
-    MarketDataUpdate update;
+    MarketDataEvent event;
 
     int count = 0;
 
-    while (feed.next_update(update))
+    while (feed.next_event(event))
     {
         ++count;
     }
 
     EXPECT_EQ(count, 5);
+
+    EXPECT_FALSE(feed.next_event(event));
 }

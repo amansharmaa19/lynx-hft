@@ -8,25 +8,17 @@ int main()
     OrderBook book;
     SimulatedFeed feed;
 
-    MarketDataUpdate update;
+    MarketDataEvent event;
 
-    while (feed.next_update(update))
+    while (feed.next_event(event))
     {
-        if (update.side == Side::Buy)
-        {
-            book.update_bid(update.price, update.quantity);
-        }
-        else
-        {
-            book.update_ask(update.price, update.quantity);
-        }
-
-        std::cout
-            << "Best Bid: " << book.best_bid()
-            << " | Best Ask: " << book.best_ask()
-            << " | Spread: " << book.spread()
-            << '\n';
+        book.apply(event);
     }
+
+    std::cout << "Best bid: " << book.best_bid() << '\n';
+    std::cout << "Best ask: " << book.best_ask() << '\n';
+    std::cout << "Spread: " << book.spread() << '\n';
+    std::cout << "Mid price: " << book.mid_price() << '\n';
 
     return 0;
 }

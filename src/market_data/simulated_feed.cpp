@@ -1,25 +1,55 @@
 #include "market_data/simulated_feed.h"
 
 SimulatedFeed::SimulatedFeed()
-    : updates_{
-          {Side::Buy, 10000, 500},
-          {Side::Buy, 9999, 300},
-          {Side::Sell, 10002, 400},
-          {Side::Sell, 10003, 600},
-          {Side::Sell, 10001, 200},
+    : events_{
+          {
+              MarketDataEventType::Add,
+              1001,
+              Side::Buy,
+              10000,
+              500
+          },
+          {
+              MarketDataEventType::Add,
+              1002,
+              Side::Buy,
+              9999,
+              300
+          },
+          {
+              MarketDataEventType::Add,
+              2001,
+              Side::Sell,
+              10002,
+              400
+          },
+          {
+              MarketDataEventType::Add,
+              2002,
+              Side::Sell,
+              10003,
+              600
+          },
+          {
+              MarketDataEventType::Add,
+              2003,
+              Side::Sell,
+              10001,
+              200
+          },
       },
       current_index_(0)
 {
 }
 
-bool SimulatedFeed::next_update(MarketDataUpdate& update)
+bool SimulatedFeed::next_event(MarketDataEvent& event)
 {
-    if (current_index_ >= updates_.size())
+    if (current_index_ >= events_.size())
     {
         return false;
     }
 
-    update = updates_[current_index_++];
+    event = events_[current_index_++];
 
     return true;
 }

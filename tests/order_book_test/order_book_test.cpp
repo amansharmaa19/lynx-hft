@@ -2,23 +2,80 @@
 
 #include "order_book/order_book.h"
 
-TEST(OrderBookTest, BestBid)
+TEST(OrderBookTest, AddBid)
 {
     OrderBook book;
 
-    book.update_bid(10000, 500);
-    book.update_bid(9999, 300);
+    book.apply({
+        MarketDataEventType::Add,
+        1001,
+        Side::Buy,
+        10000,
+        500
+    });
 
     EXPECT_EQ(book.best_bid(), 10000);
 }
 
-TEST(OrderBookTest, BestAsk)
+TEST(OrderBookTest, AddMultipleBids)
 {
     OrderBook book;
 
-    book.update_ask(10001, 200);
-    book.update_ask(10002, 400);
+    book.apply({
+        MarketDataEventType::Add,
+        1001,
+        Side::Buy,
+        10000,
+        500
+    });
 
+    book.apply({
+        MarketDataEventType::Add,
+        1002,
+        Side::Buy,
+        9999,
+        300
+    });
+
+    EXPECT_EQ(book.best_bid(), 10000);
+}
+
+TEST(OrderBookTest, AddAsk)
+{
+    OrderBook book;
+
+    book.apply({
+        MarketDataEventType::Add,
+        2001,
+        Side::Sell,
+        10001,
+        200
+    });
+
+    EXPECT_EQ(book.best_ask(), 10001);
+}
+
+TEST(OrderBookTest, BestBidAndAsk)
+{
+    OrderBook book;
+
+    book.apply({
+        MarketDataEventType::Add,
+        1001,
+        Side::Buy,
+        10000,
+        500
+    });
+
+    book.apply({
+        MarketDataEventType::Add,
+        2001,
+        Side::Sell,
+        10001,
+        200
+    });
+
+    EXPECT_EQ(book.best_bid(), 10000);
     EXPECT_EQ(book.best_ask(), 10001);
 }
 
@@ -26,32 +83,44 @@ TEST(OrderBookTest, Spread)
 {
     OrderBook book;
 
-    book.update_bid(10000, 500);
-    book.update_ask(10001, 200);
+    book.apply({
+        MarketDataEventType::Add,
+        1001,
+        Side::Buy,
+        10000,
+        500
+    });
 
-    EXPECT_EQ(book.spread(), 1);
+    book.apply({
+        MarketDataEventType::Add,
+        2001,
+        Side::Sell,
+        10002,
+        200
+    });
+
+    EXPECT_EQ(book.spread(), 2);
 }
 
 TEST(OrderBookTest, MidPrice)
 {
     OrderBook book;
 
-    book.update_bid(10000, 500);
-    book.update_ask(10002, 200);
+    book.apply({
+        MarketDataEventType::Add,
+        1001,
+        Side::Buy,
+        10000,
+        500
+    });
+
+    book.apply({
+        MarketDataEventType::Add,
+        2001,
+        Side::Sell,
+        10002,
+        200
+    });
 
     EXPECT_EQ(book.mid_price(), 10001);
-}
-
-TEST(OrderBookTest, RemovePriceLevel)
-{
-    OrderBook book;
-
-    book.update_bid(10000, 500);
-    book.update_bid(9999, 300);
-
-    EXPECT_EQ(book.best_bid(), 10000);
-
-    book.update_bid(10000, 0);
-
-    EXPECT_EQ(book.best_bid(), 9999);
 }
