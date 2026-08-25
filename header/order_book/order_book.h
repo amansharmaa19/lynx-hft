@@ -4,17 +4,9 @@
 #include <map>
 #include <unordered_map>
 
-#include "common/side.h"
-#include "common/types.h"
 #include "market_data/market_data_event.h"
-
-struct Order
-{
-    std::uint64_t order_id;
-    Side side;
-    Price price;
-    Quantity quantity;
-};
+#include "order_book/order.h"
+#include "order_book/price_level.h"
 
 class OrderBook
 {
@@ -44,9 +36,11 @@ private:
 
     void replace_order(const MarketDataEvent& event);
 
-    std::map<Price, Quantity> bids_;
+    using PriceLevels = std::map<Price, PriceLevel>;
 
-    std::map<Price, Quantity> asks_;
+    PriceLevels bids_;
 
-    std::unordered_map<std::uint64_t, Order> orders_;
+    PriceLevels asks_;
+
+    std::unordered_map<std::uint64_t, Price> order_prices_;
 };

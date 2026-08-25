@@ -19,8 +19,9 @@ add_compile_options(
 
 add_executable(lynx
     src/main.cpp
-    src/order_book/order_book.cpp
     src/market_data/simulated_feed.cpp
+    src/order_book/order_book.cpp
+    src/order_book/price_level.cpp
 )
 
 target_include_directories(lynx
@@ -37,8 +38,8 @@ enable_testing()
 find_package(GTest REQUIRED)
 
 add_executable(simulated_feed_test
-    tests/market_data/simulated_feed_test.cpp
     src/market_data/simulated_feed.cpp
+    tests/market_data/simulated_feed_test.cpp
 )
 
 target_include_directories(simulated_feed_test
@@ -47,8 +48,10 @@ target_include_directories(simulated_feed_test
 )
 
 add_executable(order_book_test
-    tests/order_book_test/order_book_test.cpp
     src/order_book/order_book.cpp
+    src/order_book/price_level.cpp
+    tests/order_book_test/order_book_test.cpp
+    tests/order_book_test/price_level_test.cpp
 )
 
 target_include_directories(order_book_test

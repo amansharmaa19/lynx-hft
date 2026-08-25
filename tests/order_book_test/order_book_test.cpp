@@ -300,3 +300,48 @@ TEST(OrderBookTest, ReplaceOrder)
     EXPECT_EQ(book.bid_quantity(10001), 300);
     EXPECT_EQ(book.best_bid(), 10001);
 }
+
+TEST(OrderBookTest, ExecuteFirstOrderAtPrice)
+{
+    OrderBook book;
+
+    book.apply({
+        MarketDataEventType::Add,
+        1001,
+        0,
+        Side::Buy,
+        10000,
+        500
+    });
+
+    book.apply({
+        MarketDataEventType::Add,
+        1002,
+        0,
+        Side::Buy,
+        10000,
+        300
+    });
+
+    book.apply({
+        MarketDataEventType::Add,
+        1003,
+        0,
+        Side::Buy,
+        10000,
+        200
+    });
+
+    EXPECT_EQ(book.bid_quantity(10000), 1000);
+
+    book.apply({
+        MarketDataEventType::Execute,
+        1001,
+        0,
+        Side::Buy,
+        10000,
+        500
+    });
+
+    EXPECT_EQ(book.bid_quantity(10000), 500);
+}

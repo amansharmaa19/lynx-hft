@@ -35,192 +35,134 @@ void OrderBook::add_order(const MarketDataEvent& event)
         event.quantity
     };
 
-    orders_[event.order_id] = order;
+    auto& levels = (event.side == Side::Buy) ? bids_ : asks_;
 
-    if (event.side == Side::Buy)
-    {
-        bids_[event.price] += event.quantity;
-    }
-    else
-    {
-        asks_[event.price] += event.quantity;
-    }
+    levels[event.price].add_order(order);
+
+    order_prices_[event.order_id] = event.price;
 }
 
 void OrderBook::execute_order(const MarketDataEvent& event)
 {
-    auto it = orders_.find(event.order_id);
+    auto price_it = order_prices_.find(event.order_id);
 
-    if (it == orders_.end())
+    if (price_it == order_prices_.end())
     {
         return;
     }
 
-    Order& order = it->second;
+    Price price = price_it->second;
 
-    Quantity executed_quantity = event.quantity;
+    auto& levels =
+        (event.side == Side::Buy) ? bids_ : asks_;
 
-    if (executed_quantity >= order.quantity)
+    auto level_it = levels.find(price);
+
+    if (level_it == levels.end())
     {
-        executed_quantity = order.quantity;
+        return;
     }
 
-    order.quantity -= executed_quantity;
+    bool removed =
+        level_it->second.reduce_order_quantity(
+            event.order_id,
+            event.quantity);
 
-    if (order.side == Side::Buy)
+    if (!removed)
     {
-        bids_[order.price] -= executed_quantity;
-
-        if (bids_[order.price] == 0)
-        {
-            bids_.erase(order.price);
-        }
-    }
-    else
-    {
-        asks_[order.price] -= executed_quantity;
-
-        if (asks_[order.price] == 0)
-        {
-            asks_.erase(order.price);
-        }
+        return;
     }
 
-    if (order.quantity == 0)
+    if (level_it->second.empty())
     {
-        orders_.erase(it);
+        order_prices_.erase(event.order_id);
+        levels.erase(level_it);
     }
 }
 
 void OrderBook::cancel_order(const MarketDataEvent& event)
 {
-    auto it = orders_.find(event.order_id);
+    auto price_it = order_prices_.find(event.order_id);
 
-    if (it == orders_.end())
+    if (price_it == order_prices_.end())
     {
         return;
     }
 
-    Order& order = it->second;
+    Price price = price_it->second;
 
-    Quantity cancelled_quantity = event.quantity;
+    auto& levels =
+        (event.side == Side::Buy) ? bids_ : asks_;
 
-    if (cancelled_quantity >= order.quantity)
+    auto level_it = levels.find(price);
+
+    if (level_it == levels.end())
     {
-        cancelled_quantity = order.quantity;
+        return;
     }
 
-    order.quantity -= cancelled_quantity;
+    bool removed =
+        level_it->second.reduce_order_quantity(
+            event.order_id,
+            event.quantity);
 
-    if (order.side == Side::Buy)
+    if (!removed)
     {
-        bids_[order.price] -= cancelled_quantity;
-
-        if (bids_[order.price] == 0)
-        {
-            bids_.erase(order.price);
-        }
-    }
-    else
-    {
-        asks_[order.price] -= cancelled_quantity;
-
-        if (asks_[order.price] == 0)
-        {
-            asks_.erase(order.price);
-        }
+        return;
     }
 
-    if (order.quantity == 0)
+    if (level_it->second.empty())
     {
-        orders_.erase(it);
+        order_prices_.erase(event.order_id);
+        levels.erase(level_it);
     }
 }
 
 void OrderBook::delete_order(const MarketDataEvent& event)
 {
-    auto it = orders_.find(event.order_id);
+    auto price_it = order_prices_.find(event.order_id);
 
-    if (it == orders_.end())
+    if (price_it == order_prices_.end())
     {
         return;
     }
 
-    const Order& order = it->second;
+    Price price = price_it->second;
 
-    if (order.side == Side::Buy)
+    auto& levels = (event.side == Side::Buy) ? bids_ : asks_;
+
+    auto level_it = levels.find(price);
+
+    if (level_it == levels.end())
     {
-        bids_[order.price] -= order.quantity;
-
-        if (bids_[order.price] == 0)
-        {
-            bids_.erase(order.price);
-        }
-    }
-    else
-    {
-        asks_[order.price] -= order.quantity;
-
-        if (asks_[order.price] == 0)
-        {
-            asks_.erase(order.price);
-        }
+        return;
     }
 
-    orders_.erase(it);
+    if (!level_it->second.remove_order(event.order_id))
+    {
+        return;
+    }
+
+    order_prices_.erase(event.order_id);
+
+    if (level_it->second.empty())
+    {
+        levels.erase(level_it);
+    }
 }
 
 void OrderBook::replace_order(const MarketDataEvent& event)
 {
-    auto it = orders_.find(event.order_id);
-
-    if (it == orders_.end())
-    {
-        return;
-    }
-
-    const Order old_order = it->second;
-
-    // Remove old order from its price level.
-    if (old_order.side == Side::Buy)
-    {
-        bids_[old_order.price] -= old_order.quantity;
-
-        if (bids_[old_order.price] == 0)
-        {
-            bids_.erase(old_order.price);
-        }
-    }
-    else
-    {
-        asks_[old_order.price] -= old_order.quantity;
-
-        if (asks_[old_order.price] == 0)
-        {
-            asks_.erase(old_order.price);
-        }
-    }
-
-    orders_.erase(it);
-
-    // Add replacement as a new order.
-    Order replacement{
-        event.new_order_id,
+    delete_order({
+        MarketDataEventType::Delete,
+        event.order_id,
+        0,
         event.side,
         event.price,
-        event.quantity
-    };
+        0
+    });
 
-    orders_[replacement.order_id] = replacement;
-
-    if (replacement.side == Side::Buy)
-    {
-        bids_[replacement.price] += replacement.quantity;
-    }
-    else
-    {
-        asks_[replacement.price] += replacement.quantity;
-    }
+    add_order(event);
 }
 
 Price OrderBook::best_bid() const
@@ -272,7 +214,7 @@ Quantity OrderBook::bid_quantity(Price price) const
         return 0;
     }
 
-    return it->second;
+    return it->second.total_quantity();
 }
 
 Quantity OrderBook::ask_quantity(Price price) const
@@ -284,5 +226,5 @@ Quantity OrderBook::ask_quantity(Price price) const
         return 0;
     }
 
-    return it->second;
+    return it->second.total_quantity();
 }
