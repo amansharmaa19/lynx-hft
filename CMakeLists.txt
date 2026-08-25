@@ -50,8 +50,10 @@ target_include_directories(simulated_feed_test
 add_executable(order_book_test
     src/order_book/order_book.cpp
     src/order_book/price_level.cpp
+    src/market_data/simulated_feed.cpp
     tests/order_book_test/order_book_test.cpp
     tests/order_book_test/price_level_test.cpp
+    tests/market_data/order_book_feed_test.cpp
 )
 
 target_include_directories(order_book_test
