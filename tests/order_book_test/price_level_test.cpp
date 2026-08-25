@@ -83,3 +83,100 @@ TEST(PriceLevelTest, CannotReduceUnknownOrder)
     EXPECT_FALSE(
         level.reduce_order_quantity(9999, 100));
 }
+
+TEST(PriceLevelTest, PartialExecutionPreservesFIFOOrder)
+{
+    PriceLevel level;
+
+    level.add_order({
+        1001,
+        Side::Buy,
+        10000,
+        500
+    });
+
+    level.add_order({
+        1002,
+        Side::Buy,
+        10000,
+        300
+    });
+
+    level.add_order({
+        1003,
+        Side::Buy,
+        10000,
+        200
+    });
+
+    // Fully execute the first order.
+    EXPECT_TRUE(
+        level.reduce_order_quantity(1001, 500));
+
+    // First order should be gone.
+    ASSERT_EQ(level.orders().size(), 2);
+
+    auto it = level.orders().begin();
+
+    // Second order should now be first.
+    EXPECT_EQ(it->order_id, 1002);
+    EXPECT_EQ(it->quantity, 300);
+
+    ++it;
+
+    // Third order remains behind it.
+    EXPECT_EQ(it->order_id, 1003);
+    EXPECT_EQ(it->quantity, 200);
+
+    EXPECT_EQ(level.total_quantity(), 500);
+}
+
+TEST(PriceLevelTest, PartialExecutionPreservesTimePriority)
+{
+    PriceLevel level;
+
+    level.add_order({
+        1001,
+        Side::Buy,
+        10000,
+        500
+    });
+
+    level.add_order({
+        1002,
+        Side::Buy,
+        10000,
+        300
+    });
+
+    level.add_order({
+        1003,
+        Side::Buy,
+        10000,
+        200
+    });
+
+    // Partially execute the first order.
+    EXPECT_TRUE(
+        level.reduce_order_quantity(1001, 200));
+
+    ASSERT_EQ(level.orders().size(), 3);
+
+    auto it = level.orders().begin();
+
+    // Order 1001 must remain first.
+    EXPECT_EQ(it->order_id, 1001);
+    EXPECT_EQ(it->quantity, 300);
+
+    ++it;
+
+    EXPECT_EQ(it->order_id, 1002);
+    EXPECT_EQ(it->quantity, 300);
+
+    ++it;
+
+    EXPECT_EQ(it->order_id, 1003);
+    EXPECT_EQ(it->quantity, 200);
+
+    EXPECT_EQ(level.total_quantity(), 800);
+}

@@ -345,3 +345,73 @@ TEST(OrderBookTest, ExecuteFirstOrderAtPrice)
 
     EXPECT_EQ(book.bid_quantity(10000), 500);
 }
+
+TEST(OrderBookTest, PartialExecutionMaintainsPriceLevelQuantity)
+{
+    OrderBook book;
+
+    book.apply({
+        MarketDataEventType::Add,
+        1001,
+        0,
+        Side::Buy,
+        10000,
+        500
+    });
+
+    book.apply({
+        MarketDataEventType::Add,
+        1002,
+        0,
+        Side::Buy,
+        10000,
+        300
+    });
+
+    book.apply({
+        MarketDataEventType::Add,
+        1003,
+        0,
+        Side::Buy,
+        10000,
+        200
+    });
+
+    EXPECT_EQ(book.bid_quantity(10000), 1000);
+
+    // Partially execute first order.
+    book.apply({
+        MarketDataEventType::Execute,
+        1001,
+        0,
+        Side::Buy,
+        10000,
+        200
+    });
+
+    EXPECT_EQ(book.bid_quantity(10000), 800);
+
+    // Finish first order.
+    book.apply({
+        MarketDataEventType::Execute,
+        1001,
+        0,
+        Side::Buy,
+        10000,
+        300
+    });
+
+    EXPECT_EQ(book.bid_quantity(10000), 500);
+
+    // Execute second order.
+    book.apply({
+        MarketDataEventType::Execute,
+        1002,
+        0,
+        Side::Buy,
+        10000,
+        300
+    });
+
+    EXPECT_EQ(book.bid_quantity(10000), 200);
+}
