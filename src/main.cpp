@@ -6,6 +6,7 @@
 int main()
 {
     OrderBook book;
+
     SimulatedFeed feed;
 
     MarketDataEvent event;
