@@ -12,6 +12,7 @@ TEST(SimulatedFeedTest, ProducesEvents)
 
     EXPECT_EQ(event.type, MarketDataEventType::Add);
     EXPECT_EQ(event.order_id, 1001);
+    EXPECT_EQ(event.new_order_id, 0);
     EXPECT_EQ(event.side, Side::Buy);
     EXPECT_EQ(event.price, 10000);
     EXPECT_EQ(event.quantity, 500);

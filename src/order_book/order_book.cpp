@@ -181,6 +181,7 @@ void OrderBook::replace_order(const MarketDataEvent& event)
 
     const Order old_order = it->second;
 
+    // Remove old order from its price level.
     if (old_order.side == Side::Buy)
     {
         bids_[old_order.price] -= old_order.quantity;
@@ -202,7 +203,24 @@ void OrderBook::replace_order(const MarketDataEvent& event)
 
     orders_.erase(it);
 
-    add_order(event);
+    // Add replacement as a new order.
+    Order replacement{
+        event.new_order_id,
+        event.side,
+        event.price,
+        event.quantity
+    };
+
+    orders_[replacement.order_id] = replacement;
+
+    if (replacement.side == Side::Buy)
+    {
+        bids_[replacement.price] += replacement.quantity;
+    }
+    else
+    {
+        asks_[replacement.price] += replacement.quantity;
+    }
 }
 
 Price OrderBook::best_bid() const

@@ -9,6 +9,7 @@ TEST(OrderBookTest, AddBid)
     book.apply({
         MarketDataEventType::Add,
         1001,
+        0,
         Side::Buy,
         10000,
         500
@@ -24,6 +25,7 @@ TEST(OrderBookTest, AddMultipleBids)
     book.apply({
         MarketDataEventType::Add,
         1001,
+        0,
         Side::Buy,
         10000,
         500
@@ -32,6 +34,7 @@ TEST(OrderBookTest, AddMultipleBids)
     book.apply({
         MarketDataEventType::Add,
         1002,
+        0,
         Side::Buy,
         9999,
         300
@@ -47,6 +50,7 @@ TEST(OrderBookTest, AddAsk)
     book.apply({
         MarketDataEventType::Add,
         2001,
+        0,
         Side::Sell,
         10001,
         200
@@ -62,6 +66,7 @@ TEST(OrderBookTest, BestBidAndAsk)
     book.apply({
         MarketDataEventType::Add,
         1001,
+        0,
         Side::Buy,
         10000,
         500
@@ -70,6 +75,7 @@ TEST(OrderBookTest, BestBidAndAsk)
     book.apply({
         MarketDataEventType::Add,
         2001,
+        0,
         Side::Sell,
         10001,
         200
@@ -86,6 +92,7 @@ TEST(OrderBookTest, Spread)
     book.apply({
         MarketDataEventType::Add,
         1001,
+        0,
         Side::Buy,
         10000,
         500
@@ -94,6 +101,7 @@ TEST(OrderBookTest, Spread)
     book.apply({
         MarketDataEventType::Add,
         2001,
+        0,
         Side::Sell,
         10002,
         200
@@ -109,6 +117,7 @@ TEST(OrderBookTest, MidPrice)
     book.apply({
         MarketDataEventType::Add,
         1001,
+        0,
         Side::Buy,
         10000,
         500
@@ -117,6 +126,7 @@ TEST(OrderBookTest, MidPrice)
     book.apply({
         MarketDataEventType::Add,
         2001,
+        0,
         Side::Sell,
         10002,
         200
@@ -132,6 +142,7 @@ TEST(OrderBookTest, ExecuteOrder)
     book.apply({
         MarketDataEventType::Add,
         1001,
+        0,
         Side::Buy,
         10000,
         500
@@ -140,6 +151,7 @@ TEST(OrderBookTest, ExecuteOrder)
     book.apply({
         MarketDataEventType::Execute,
         1001,
+        0,
         Side::Buy,
         10000,
         200
@@ -156,6 +168,7 @@ TEST(OrderBookTest, ExecuteEntireOrderRemovesOrder)
     book.apply({
         MarketDataEventType::Add,
         1001,
+        0,
         Side::Buy,
         10000,
         500
@@ -164,6 +177,7 @@ TEST(OrderBookTest, ExecuteEntireOrderRemovesOrder)
     book.apply({
         MarketDataEventType::Execute,
         1001,
+        0,
         Side::Buy,
         10000,
         500
@@ -180,6 +194,7 @@ TEST(OrderBookTest, CancelOrder)
     book.apply({
         MarketDataEventType::Add,
         1001,
+        0,
         Side::Buy,
         10000,
         500
@@ -188,6 +203,7 @@ TEST(OrderBookTest, CancelOrder)
     book.apply({
         MarketDataEventType::Cancel,
         1001,
+        0,
         Side::Buy,
         10000,
         200
@@ -203,6 +219,7 @@ TEST(OrderBookTest, DeleteOrder)
     book.apply({
         MarketDataEventType::Add,
         1001,
+        0,
         Side::Buy,
         10000,
         500
@@ -211,6 +228,7 @@ TEST(OrderBookTest, DeleteOrder)
     book.apply({
         MarketDataEventType::Delete,
         1001,
+        0,
         Side::Buy,
         10000,
         0
@@ -227,6 +245,7 @@ TEST(OrderBookTest, MultipleOrdersAtSamePrice)
     book.apply({
         MarketDataEventType::Add,
         1001,
+        0,
         Side::Buy,
         10000,
         500
@@ -235,6 +254,7 @@ TEST(OrderBookTest, MultipleOrdersAtSamePrice)
     book.apply({
         MarketDataEventType::Add,
         1002,
+        0,
         Side::Buy,
         10000,
         200
@@ -245,10 +265,38 @@ TEST(OrderBookTest, MultipleOrdersAtSamePrice)
     book.apply({
         MarketDataEventType::Execute,
         1001,
+        0,
         Side::Buy,
         10000,
         300
     });
 
     EXPECT_EQ(book.bid_quantity(10000), 400);
+}
+
+TEST(OrderBookTest, ReplaceOrder)
+{
+    OrderBook book;
+
+    book.apply({
+        MarketDataEventType::Add,
+        1001,
+        0,
+        Side::Buy,
+        10000,
+        500
+    });
+
+    book.apply({
+        MarketDataEventType::Replace,
+        1001,
+        1005,
+        Side::Buy,
+        10001,
+        300
+    });
+
+    EXPECT_EQ(book.bid_quantity(10000), 0);
+    EXPECT_EQ(book.bid_quantity(10001), 300);
+    EXPECT_EQ(book.best_bid(), 10001);
 }
