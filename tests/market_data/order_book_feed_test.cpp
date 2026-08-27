@@ -68,7 +68,7 @@ TEST(MarketDataPipelineTest, ReplayUpdatesBookStateAfterEachEvent)
 
     EXPECT_EQ(book.best_bid(), 10000);
     EXPECT_EQ(book.best_ask(), 10001);
-    EXPECT_EQ(book.spread(), 2);
+    EXPECT_EQ(book.spread(), 1);
 
     EXPECT_FALSE(feed.next_event(event));
 }
