@@ -3,11 +3,11 @@ name: Lynx HFT CI
 on:
   pull request:
     branches:
-      - master
+      - main
   
   push:
     branches:
-      - master
+      - main
 
 jobs:
   build-and-test:
