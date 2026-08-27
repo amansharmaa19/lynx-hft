@@ -28,3 +28,47 @@ TEST(MarketDataPipelineTest, SimulatedFeedBuildsOrderBook)
     EXPECT_EQ(book.spread(), 1);
     EXPECT_EQ(book.mid_price(), 10000);
 }
+
+TEST(MarketDataPipelineTest, ReplayUpdatesBookStateAfterEachEvent)
+{
+    SimulatedFeed feed;
+    OrderBook book;
+
+    MarketDataEvent event;
+
+    ASSERT_TRUE(feed.next_event(event));
+    book.apply(event);
+
+    EXPECT_EQ(book.best_bid(), 10000);
+    EXPECT_EQ(book.best_ask(), 0);
+
+    ASSERT_TRUE(feed.next_event(event));
+    book.apply(event);
+
+    EXPECT_EQ(book.best_bid(), 10000);
+    EXPECT_EQ(book.best_ask(), 0);
+    EXPECT_EQ(book.spread(), 0);
+
+    ASSERT_TRUE(feed.next_event(event));
+    book.apply(event);
+
+    EXPECT_EQ(book.best_bid(), 10000);
+    EXPECT_EQ(book.best_ask(), 10002);
+    EXPECT_EQ(book.spread(), 2);
+
+    ASSERT_TRUE(feed.next_event(event));
+    book.apply(event);
+
+    EXPECT_EQ(book.best_bid(), 10000);
+    EXPECT_EQ(book.best_ask(), 10002);
+    EXPECT_EQ(book.spread(), 2);
+
+    ASSERT_TRUE(feed.next_event(event));
+    book.apply(event);
+
+    EXPECT_EQ(book.best_bid(), 10000);
+    EXPECT_EQ(book.best_ask(), 10001);
+    EXPECT_EQ(book.spread(), 1);
+
+    EXPECT_FALSE(feed.next_event(event));
+}
