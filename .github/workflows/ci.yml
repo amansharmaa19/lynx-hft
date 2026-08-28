@@ -10,8 +10,12 @@ on:
       - main
 
 jobs:
-  build-and-test:
-    runs-on: ubuntu-latest
+  # ------------------------------------------------------------
+  # Debug build
+  # ------------------------------------------------------------
+  debug:
+    name: Debug Build & Test
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout
@@ -28,13 +32,201 @@ jobs:
 
       - name: Configure
         run: |
-          cmake -S . -B build -G Ninja \
+          cmake -S . -B build-debug -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug
+
+      - name: Build
+        run: |
+          cmake --build build-debug --parallel
+
+      - name: Run tests
+        run: |
+          ctest \
+            --test-dir build-debug \
+            --output-on-failure
+
+
+  # ------------------------------------------------------------
+  # Release build
+  # ------------------------------------------------------------
+  release:
+    name: Release Build & Test
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            cmake \
+            ninja-build \
+            g++ \
+            libgtest-dev
+
+      - name: Configure
+        run: |
+          cmake -S . -B build-release -G Ninja \
             -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
         run: |
-          cmake --build build
+          cmake --build build-release --parallel
 
       - name: Run tests
         run: |
-          ctest --test-dir build --output-on-failure
+          ctest \
+            --test-dir build-release \
+            --output-on-failure
+
+
+  # ------------------------------------------------------------
+  # AddressSanitizer
+  # ------------------------------------------------------------
+  asan:
+    name: AddressSanitizer
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            cmake \
+            ninja-build \
+            g++ \
+            libgtest-dev
+
+      - name: Configure
+        run: |
+          cmake -S . -B build-asan -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DENABLE_ASAN=ON
+
+      - name: Build
+        run: |
+          cmake --build build-asan --parallel
+
+      - name: Run tests
+        run: |
+          ctest \
+            --test-dir build-asan \
+            --output-on-failure
+
+
+  # ------------------------------------------------------------
+  # UndefinedBehaviorSanitizer
+  # ------------------------------------------------------------
+  ubsan:
+    name: UndefinedBehaviorSanitizer
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            cmake \
+            ninja-build \
+            g++ \
+            libgtest-dev
+
+      - name: Configure
+        run: |
+          cmake -S . -B build-ubsan -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DENABLE_UBSAN=ON
+
+      - name: Build
+        run: |
+          cmake --build build-ubsan --parallel
+
+      - name: Run tests
+        run: |
+          ctest \
+            --test-dir build-ubsan \
+            --output-on-failure
+
+
+  # ------------------------------------------------------------
+  # ThreadSanitizer
+  # ------------------------------------------------------------
+  tsan:
+    name: ThreadSanitizer
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            cmake \
+            ninja-build \
+            g++ \
+            libgtest-dev
+
+      - name: Configure
+        run: |
+          cmake -S . -B build-tsan -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DENABLE_TSAN=ON
+
+      - name: Build
+        run: |
+          cmake --build build-tsan --parallel
+
+      - name: Run tests
+        run: |
+          ctest \
+            --test-dir build-tsan \
+            --output-on-failure
+
+
+  # ------------------------------------------------------------
+  # clang-tidy
+  # ------------------------------------------------------------
+  clang-tidy:
+    name: clang-tidy
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            cmake \
+            ninja-build \
+            g++ \
+            clang-tidy \
+            libgtest-dev
+
+      - name: Configure
+        run: |
+          cmake -S . -B build-tidy -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DENABLE_CLANG_TIDY=ON
+
+      - name: Build with clang-tidy
+        run: |
+          cmake --build build-tidy --parallel
+
+      - name: Run tests
+        run: |
+          ctest \
+            --test-dir build-tidy \
+            --output-on-failure
+```

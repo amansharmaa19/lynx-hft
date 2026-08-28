@@ -19,3 +19,6 @@ build/
 *.o
 *.a
 *.so
+# CMake build directories
+build/
+build-*/
